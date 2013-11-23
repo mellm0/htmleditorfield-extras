@@ -1,0 +1,17 @@
+{
+	"name": "milkyway/silverstripe-htmleditorfield-extras",
+	"description": "Add some extra functionality to HTMLEditorFields in Silverstripe",
+	"type": "silverstripe-module",
+	"keywords": ["silverstripe", "htmleditorfield", "tinymce"],
+	"license": "BSD-3-Clause",
+	"authors": [{
+		"name": "Mellisa Hankins",
+		"email": "mell@milkywaymultimedia.com.au"
+	}],
+	"require": {
+		"silverstripe/framework": "~3.1"
+	},
+	"extra": {
+		"installer-name": "htmleditorfield-extras"
+	}
+}

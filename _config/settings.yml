@@ -1,0 +1,10 @@
+---
+Name: htmleditorfield-extras
+After:
+  - 'framework/*'
+---
+LeftAndMain:
+  extra_requirements_javascript:
+    - 'htmleditorfield-extras/javascript/mwm.htmleditorfield-extras.js'
+  extra_requirements_css:
+    - 'htmleditorfield-extras/css/mwm.htmleditorfield-extras.min.css'
