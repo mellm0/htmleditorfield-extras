@@ -12,6 +12,9 @@
 		"silverstripe/framework": "~3.1"
 	},
 	"extra": {
-		"installer-name": "htmleditorfield-extras"
+		"installer-name": "htmleditorfield-extras",
+		"screenshots": [
+			"dev/screenshot.jpg"
+		]
 	}
 }
