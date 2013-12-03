@@ -3,6 +3,9 @@ Name: htmleditorfield-extras
 After:
   - 'framework/*'
 ---
+HTMLEditorField_Toolbar:
+  extensions:
+    - 'HTMLEditorField_Toolbar_Extras'
 LeftAndMain:
   extra_requirements_javascript:
     - 'htmleditorfield-extras/javascript/mwm.htmleditorfield-extras.js'
