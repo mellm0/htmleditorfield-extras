@@ -8,8 +8,173 @@
  * @author Mellisa Hankins <mell@milkywaymultimedia.com.au>
  */
 
-(function($) {
-	$.entwine('ss', function($) {
+var _mwm = _mwm || {};
+_mwm.editors = _mwm.editors || {};
+
+(function ($) {
+	$.entwine('ss', function ($) {
+		$('textarea.htmleditor').entwine({
+			redraw: function () {
+				var self = this,
+					id = self.attr('id');
+
+				if(!id) {
+					this._super();
+					return;
+				}
+
+				var _old = ssTinyMceConfig,
+					config = _mwm.editors.hasOwnProperty(id) ? _mwm.editors[id] : $.extend({}, ssTinyMceConfig);
+
+				if (typeof config != 'undefined' && !config.hasOwnProperty('mwm')) {
+					config.mwm = true;
+
+					if(self.data('tinymceContentCss')) {
+						config.old_content_css = ssTinyMceConfig.content_css;
+						config.content_css = self.data('tinymceContentCss');
+					}
+
+					if(self.hasClass('limited-with-links') && config.hasOwnProperty('plugins') && config.plugins.indexOf('-ssbuttons') !== -1) {
+						if(config.hasOwnProperty('theme_advanced_buttons1') && config.theme_advanced_buttons1.indexOf('sslink') === -1) {
+							config.theme_advanced_buttons1 = config.theme_advanced_buttons1 + ',sslink,unlink';
+						}
+					}
+
+					var _oldSetupCallback = ssTinyMceConfig.hasOwnProperty('setupcontent_callback') ? config.setupcontent_callback : null;
+
+					config.setupcontent_callback = function (eId, body, doc) {
+						var $me = $("#" + eId),
+							$body = $(body);
+
+						if ($me.length && $me.data("tinymceClasses"))
+							$body.addClass($me.data("tinymceClasses"));
+
+						if (_oldSetupCallback)
+							_oldSetupCallback(eId, body, doc);
+					};
+
+					var _oldSetup = config.hasOwnProperty('setup') ? config.setup : null;
+
+					config.setup = function (editor) {
+						var allowed = 0,
+							total = 0,
+							curr = 0,
+							$me = $("#" + editor.editorId),
+							message = '';
+
+						if ($me.attr("maxlength")) {
+							var max = $me.attr("maxlength"),
+								indicator = $me.data("tinymceMaxlengthIndicator"),
+								$indicator = [];
+
+							if(indicator) {
+								message = ss.i18n._t('HTMLEditorField.THERE_ARE', 'There are') + ' ' + max + ' ' + ss.i18n._t('HTMLEditorField.CHARACTERS_LEFT', 'characters left');
+
+								if(indicator && (typeof indicator == 'string' || indicator instanceof String))
+									$indicator = $(indicator);
+
+								if ($indicator.length) {
+									$indicator.text(message);
+
+									if (max <= 0)
+										$indicator.addClass('error');
+									else
+										$indicator.removeClass('error');
+								}
+							}
+
+							editor.onKeyUp.add(function (ed, e) {
+								total = self.getTextCountFromEditor(ed);
+								allowed = max - total;
+
+								if(allowed < 0) allowed = 0;
+
+								if(indicator) {
+									message = ss.i18n._t('HTMLEditorField.THERE_ARE', 'There are') + ' ' + allowed + ' ' + ss.i18n._t('HTMLEditorField.CHARACTERS_LEFT', 'characters left');
+
+									if ($indicator.length) {
+										$indicator.text(message);
+
+										if (allowed <= 0)
+											$indicator.addClass('error');
+										else
+											$indicator.removeClass('error');
+									}
+									else{
+										if(allowed <= 0) { }
+										else if(curr != total)
+											statusMessage(message);
+									}
+								}
+
+								setTimeout(function() { curr = total }, 0);
+							});
+
+							editor.onChange.add(function (ed, e) {
+								total = self.getTextCountFromEditor(ed);
+								allowed = max - total;
+
+								if(allowed < 0) allowed = 0;
+
+								if(indicator) {
+									message = ss.i18n._t('HTMLEditorField.THERE_ARE', 'There are') + ' ' + allowed + ' ' + ss.i18n._t('HTMLEditorField.CHARACTERS_LEFT', 'characters left');
+
+									if ($indicator.length) {
+										$indicator.text(message);
+
+										if (allowed <= 0)
+											$indicator.addClass('error');
+										else
+											$indicator.removeClass('error');
+									}
+									else{
+										if(allowed <= 0) { }
+										else if(curr != total)
+											statusMessage(message);
+									}
+								}
+
+								setTimeout(function() { curr = total }, 0);
+							});
+
+							editor.onKeyDown.add(function (ed, e) {
+								if(!allowed) {
+									total = self.getTextCountFromEditor(ed);
+									allowed = max - total;
+								}
+
+								if (allowed <= 0 && e.keyCode != 8 && e.keyCode != 46) {
+									tinymce.dom.Event.cancel(e);
+									errorMessage(ss.i18n.sprintf(
+										ss.i18n._t('HTMLEditorField.MAX_CHARACTERS', 'This field can only contain %s characters'),
+										max
+									));
+								}
+							});
+						}
+
+						if (_oldSetup)
+							_oldSetup(editor);
+					};
+				}
+
+				ssTinyMceConfig = config;
+
+				this._super();
+
+				ssTinyMceConfig = _old;
+			},
+			getTextCountFromEditor: function (editor) {
+				if (!editor)
+					editor = this.getEditor();
+
+				var text = editor.getContent().replace(/<[^>]*>/g, '').replace(/\s+/g, ' ');
+				text = text.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+
+				return text ? text.length : 0;
+			}
+		});
+
 		$('form.htmleditorfield-linkform').entwine({
 			getEditorField: function(){
 				return $('#' + this.getEditor().getInstance().editorId);
