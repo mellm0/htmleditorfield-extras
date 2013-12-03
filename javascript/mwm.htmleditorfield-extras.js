@@ -16,7 +16,8 @@ _mwm.editors = _mwm.editors || {};
 		$('textarea.htmleditor').entwine({
 			redraw: function () {
 				var self = this,
-					id = self.attr('id');
+					id = self.attr('id'),
+					key = id + '--' + window.location.pathname.replace(/\W/g, '');
 
 				if(!id) {
 					this._super();
@@ -24,7 +25,7 @@ _mwm.editors = _mwm.editors || {};
 				}
 
 				var _old = ssTinyMceConfig,
-					config = _mwm.editors.hasOwnProperty(id) ? _mwm.editors[id] : $.extend({}, ssTinyMceConfig);
+					config = _mwm.editors.hasOwnProperty(key) ? _mwm.editors[key] : $.extend({}, ssTinyMceConfig);
 
 				if (typeof config != 'undefined' && !config.hasOwnProperty('mwm')) {
 					config.mwm = true;
@@ -157,6 +158,8 @@ _mwm.editors = _mwm.editors || {};
 							_oldSetup(editor);
 					};
 				}
+
+				_mwm.editors[key] = config;
 
 				ssTinyMceConfig = config;
 
