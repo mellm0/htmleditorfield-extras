@@ -10,10 +10,16 @@
 
 var _mwm = _mwm || {};
 _mwm.editors = _mwm.editors || {};
+_mwm.editorCount = _mwm.editorCount || 0;
+_mwm.editorReset = 50;
 
 (function ($) {
 	$.entwine('ss', function ($) {
 		$('textarea.htmleditor').entwine({
+			onadd: function() {
+				var ed = tinyMCE.get(this.attr('id'));
+				if(!ed) this._super();
+			},
 			redraw: function () {
 				var self = this,
 					id = self.attr('id'),
@@ -41,18 +47,12 @@ _mwm.editors = _mwm.editors || {};
 						}
 					}
 
-					var _oldSetupCallback = ssTinyMceConfig.hasOwnProperty('setupcontent_callback') ? config.setupcontent_callback : null;
-
-					config.setupcontent_callback = function (eId, body, doc) {
-						var $me = $("#" + eId),
-							$body = $(body);
-
-						if ($me.length && $me.data("tinymceClasses"))
-							$body.addClass($me.data("tinymceClasses"));
-
-						if (_oldSetupCallback)
-							_oldSetupCallback(eId, body, doc);
-					};
+					if(self.data('tinymceClasses')) {
+						if(config.hasOwnProperty('body_class'))
+							config.body_class = config.body_class + ' ' + self.data('tinymceClasses');
+						else
+							config.body_class = self.data('tinymceClasses');
+					}
 
 					var _oldSetup = config.hasOwnProperty('setup') ? config.setup : null;
 
@@ -156,10 +156,28 @@ _mwm.editors = _mwm.editors || {};
 
 						if (_oldSetup)
 							_oldSetup(editor);
-					};
-				}
 
-				_mwm.editors[key] = config;
+						var selector = config.hasOwnProperty('editor_selector') ? config.editor_selector : '';
+
+						editor.onPostRender.add(function (ed) {
+							var $container = $('#' + ed.editorId).siblings('#' + ed.editorContainer);
+
+							setTimeout(function() {
+								if(ed.container)
+									$(ed.container).addClass(self.attr('class').replace(selector, ''));
+								else if($container.length)
+									$container.addClass(self.attr('class').replace(selector, ''));
+							}, 10);
+						});
+					};
+
+					_mwm.editorCount++;
+
+					_mwm.editors[key] = config;
+
+					if(_mwm.editorCount > _mwm.editorReset)
+						_mwm.editors = {};
+				}
 
 				ssTinyMceConfig = config;
 
